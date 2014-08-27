@@ -92,6 +92,14 @@ copy_params.each do |key|
   end
 end
 
+file node[:consul][:config_dir] + '/default.json' do
+  user consul_user
+  group consul_group
+  mode 0600
+  action :create
+  content JSON.pretty_generate(service_config, quirks_mode: true)
+end
+
 case node[:consul][:init_style]
 when 'init'
   template '/etc/init.d/consul' do
@@ -101,31 +109,23 @@ when 'init'
       consul_binary: "#{node[:consul][:install_dir]}/consul",
       config_dir: node[:consul][:config_dir],
     )
-    notifies :restart, 'service[consul]', :immediately
+    notifies :restart, 'service[consul]', :delayed
   end
 
   service 'consul' do
     supports status: true, restart: true, reload: true
-    action [:enable, :start]
+    action [:enable]
     subscribes :restart, "file[#{node[:consul][:config_dir]}/default.json]", :delayed
   end
 when 'runit'
   runit_service 'consul' do
     supports status: true, restart: true, reload: true
-    action [:enable, :start]
-    subscribes :restart, "file[#{node[:consul][:config_dir]}/default.json]", :immediately
+    action [:enable]
+    subscribes :restart, "file[#{node[:consul][:config_dir]}/default.json]", :delayed
     log true
     options(
       consul_binary: "#{node[:consul][:install_dir]}/consul",
       config_dir: node[:consul][:config_dir],
     )
   end
-end
-
-file node[:consul][:config_dir] + '/default.json' do
-  user consul_user
-  group consul_group
-  mode 0600
-  action :create
-  content JSON.pretty_generate(service_config, quirks_mode: true)
 end
