@@ -35,6 +35,13 @@ else
   consul_group = 'root'
 end
 
+directory "/home/#{node[:consul][:service_user]}" do
+  owner node[:consul][:service_user]
+  group node[:consul][:service_group]
+  recursive true
+  action :create
+end 
+
 # Create service user
 user "consul service user: #{consul_user}" do
   not_if { consul_user == 'root' }
