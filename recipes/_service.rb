@@ -39,7 +39,8 @@ end
 user "consul service user: #{consul_user}" do
   not_if { consul_user == 'root' }
   username consul_user
-  home '/dev/null'
+  home '/home/consul'
+  supports :manage_home => true
   shell '/bin/false'
   comment 'consul service user'
 end
